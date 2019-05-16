@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+    aws-s3: circleci/aws-s3@1.0.9
 executors:
   default:
     docker:
@@ -25,6 +27,19 @@ jobs:
     steps:
       - checkout
       - run: make dist
+      - persist_to_workspace:
+          root: dist
+          paths:
+              - "*.tar.gz"
+
+  deploy:
+    docker:
+        - image: circleci/python:2.7
+    steps:
+        - attach_workspace:
+            at: dist
+        - run: ls dist
+      
 
 workflows:
   version: 2
@@ -33,3 +48,8 @@ workflows:
       - lint
       - test
       - build
+      - deploy:
+          requires:
+            - lint
+            - test
+            - build
